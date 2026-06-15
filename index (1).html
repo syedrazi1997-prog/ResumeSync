@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ResumeSync Pro - Advanced Professional Resume Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* PDF print configurations */
+        @media print {
+            body *, #page-1, #page-2, #auth-modal, #payment-modal, #success-page, header, .no-print { 
+                display: none !important; 
+            }
+            #printable-resume-container, #printable-resume-container * { 
+                display: block !important; 
+            }
+            #printable-resume-container { 
+                width: 100% !important; 
+                position: absolute; 
+                left: 0; 
+                top: 0; 
+                padding: 0 !important; 
+                margin: 0 !important; 
+                box-shadow: none !important; 
+            }
+        }
+        .experience-card:hover .remove-btn { display: block; }
+    </style>
+</head>
+<body class="bg-slate-100 font-sans min-h-screen flex flex-col">
+
+    <header class="bg-slate-900 text-white shadow-md p-4 flex justify-between items-center no-print">
+        <h1 class="text-xl font-bold tracking-tight">🚀 ResumeSync <span class="text-indigo-400">Pro</span></h1>
+        <div class="text-xs text-slate-400 font-medium">Secure Checkout Enabled</div>
+    </header>
+
+    <div id="page-1" class="flex-1 flex flex-col lg:flex-row p-6 gap-6 max-w-7xl mx-auto w-full overflow-hidden">
+        <section class="w-full lg:w-3/5 bg-white rounded-2xl shadow-sm p-6 overflow-y-auto space-y-6" style="max-height: 85vh;">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-4">
+                <h2 class="text-2xl font-extrabold text-slate-800">Build Your Identity</h2>
+                <button onclick="navigateToPage(2)" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition-all shadow-lg shadow-indigo-200">
+                    Next: Pick Template ➡️
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
+                <div class="md:col-span-1 flex flex-col items-center gap-3">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Profile Photo</label>
+                    <div id="photo-preview" class="w-32 h-32 bg-slate-100 rounded-full border-4 border-white shadow-inner flex items-center justify-center overflow-hidden">
+                        <span class="text-slate-400 text-3xl">👤</span>
+                    </div>
+                    <input type="file" id="input-photo" onchange="handlePhotoUpload(event)" class="hidden">
+                    <button onclick="document.getElementById('input-photo').click()" class="text-indigo-600 text-[10px] font-bold uppercase hover:underline">Upload Image</button>
+                </div>
+
+                <div class="md:col-span-3 space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Full Name</label>
+                            <input type="text" id="input-name" oninput="updatePreview()" placeholder="Alex Johnson" class="w-full mt-1 p-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-400 outline-none text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Job Title</label>
+                            <input type="text" id="input-title" oninput="updatePreview()" placeholder="Senior Product Designer" class="w-full mt-1 p-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-400 outline-none text-sm">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Email Address</label>
+                            <input type="email" id="input-email" oninput="updatePreview()" placeholder="alex.j@example.com" class="w-full mt-1 p-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-400 outline-none text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Phone Number</label>
+                            <input type="text" id="input-phone" oninput="updatePreview()" placeholder="+1 555 0123" class="w-full mt-1 p-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-400 outline-none text-sm">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-indigo-50/50 p-5 rounded-2xl border border-indigo-100/50">
+                <div class="flex justify-between items-center mb-2">
+                    <label class="block text-xs font-bold text-indigo-900/60 uppercase tracking-widest">Professional Summary</label>
+                    <button id="ai-btn" onclick="enhanceBioWithAI()" class="bg-white hover:bg-indigo-600 hover:text-white text-indigo-600 text-[10px] font-extrabold px-3 py-2 rounded-lg transition-all border border-indigo-200 flex items-center gap-1 shadow-sm">
+                        ✨ AI ENHANCE BIO
+                    </button>
+                </div>
+                <textarea id="input-summary" oninput="updatePreview()" rows="3" placeholder="I have 5 years of experience in..." class="w-full mt-1 p-3 bg-transparent border-none focus:ring-0 outline-none text-sm text-slate-700 leading-relaxed"></textarea>
+            </div>
+
+            <div>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-slate-800">Professional Experience</h3>
+                    <button onclick="addExperience()" class="bg-slate-800 hover:bg-slate-900 text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-all">
+                        ➕ ADD EXPERIENCE
+                    </button>
+                </div>
+                <div id="experience-inputs-container" class="space-y-6"></div>
+            </div>
+        </section>
+
+        <section class="hidden lg:flex w-2/5 bg-slate-200 rounded-2xl p-6 items-center justify-center relative">
+            <div class="absolute top-4 left-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Draft Snapshot</div>
+            <div id="mini-preview" class="bg-white w-full h-[500px] shadow-2xl rounded p-6 scale-90 origin-center overflow-hidden"></div>
+        </section>
+    </div>
+
+    <div id="page-2" class="hidden flex-1 flex flex-col md:flex-row p-6 gap-6 max-w-7xl mx-auto w-full overflow-hidden">
+        <section class="w-full md:w-1/3 bg-white rounded-2xl shadow-sm p-6 space-y-6">
+            <button onclick="navigateToPage(1)" class="text-indigo-600 hover:underline font-bold text-xs uppercase tracking-widest">⬅️ Back to edit</button>
+            <h2 class="text-xl font-black text-slate-800">Select Template</h2>
+
+            <div class="space-y-4">
+                <button onclick="selectTemplate('standard')" id="btn-tmpl-standard" class="w-full text-left p-4 rounded-2xl border-2 border-indigo-600 bg-indigo-50">
+                    <div class="font-bold text-slate-900 text-sm">Professional Minimalist</div>
+                    <div class="text-[10px] text-slate-500 uppercase mt-1">Slate & White • High ATS Score</div>
+                </button>
+                <button onclick="selectTemplate('executive')" id="btn-tmpl-executive" class="w-full text-left p-4 rounded-2xl border-2 border-slate-100 hover:bg-slate-50">
+                    <div class="font-bold text-slate-900 text-sm">Executive Corporate</div>
+                    <div class="text-[10px] text-slate-500 uppercase mt-1">Deep Navy • Premium Header</div>
+                </button>
+                <button onclick="selectTemplate('creative')" id="btn-tmpl-creative" class="w-full text-left p-4 rounded-2xl border-2 border-slate-100 hover:bg-slate-50">
+                    <div class="font-bold text-slate-900 text-sm">Creative Emerald</div>
+                    <div class="text-[10px] text-slate-500 uppercase mt-1">Green Sidebar • Distinctive</div>
+                </button>
+            </div>
+
+            <button onclick="triggerAuthFlow()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-4 rounded-2xl transition-all shadow-xl flex justify-center items-center gap-2 tracking-wide text-sm">
+                📥 DOWNLOAD NOW
+            </button>
+        </section>
+
+        <section class="w-full md:w-2/3 bg-slate-300 rounded-2xl p-4 md:p-8 overflow-y-auto flex justify-center" style="max-height: 85vh;">
+            <div id="printable-resume-container" class="bg-white w-[210mm] min-h-[297mm] shadow-2xl p-12 rounded-sm origin-top scale-[0.8] md:scale-100"></div>
+        </section>
+    </div>
+
+    <div id="auth-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 text-center space-y-6">
+            <div>
+                <h3 class="text-xl font-extrabold text-slate-900">Sign in to unlock download</h3>
+                <p class="text-xs text-slate-400 mt-1">Choose an email provider account to securely save your document copies</p>
+            </div>
+            <div class="space-y-3">
+                <button onclick="simulateLogin('Google')" class="w-full flex items-center justify-center gap-3 border border-slate-200 p-3 rounded-xl hover:bg-slate-50 font-bold text-sm text-slate-700 transition-all">
+                    <span class="text-base">🔴</span> Continue with Google
+                </button>
+                <button onclick="simulateLogin('Microsoft')" class="w-full flex items-center justify-center gap-3 border border-slate-200 p-3 rounded-xl hover:bg-slate-50 font-bold text-sm text-slate-700 transition-all">
+                    <span class="text-base">🔵</span> Continue with Microsoft
+                </button>
+                <button onclick="simulateLogin('GitHub')" class="w-full flex items-center justify-center gap-3 border border-slate-200 p-3 rounded-xl hover:bg-slate-50 font-bold text-sm text-slate-700 transition-all">
+                    <span class="text-base">⚫</span> Continue with GitHub
+                </button>
+            </div>
+            <button onclick="closeModal('auth-modal')" class="text-xs font-semibold text-slate-400 hover:underline">Cancel</button>
+        </div>
+    </div>
+
+    <div id="payment-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden border border-slate-100">
+            <div class="bg-indigo-900 text-white p-6 text-center">
+                <div class="text-[10px] font-bold tracking-widest text-indigo-300 uppercase">Secure Checkout</div>
+                <div class="text-3xl font-black mt-2">₹ 1.00</div>
+                <p class="text-xs text-indigo-200 mt-1">ResumeSync Pro Premium Plan</p>
+            </div>
+            <div class="p-6 space-y-6">
+                <div class="space-y-3">
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Select Payment Mode</label>
+                    <button onclick="processPayment('UPI / GooglePay')" class="w-full flex justify-between items-center bg-slate-50 hover:bg-indigo-50 border border-slate-100 p-3 rounded-xl font-bold text-xs text-slate-700 transition-all">
+                        <span>⚡ BHIM UPI / GPay / PhonePe</span> <span>➡️</span>
+                    </button>
+                    <button onclick="processPayment('Credit/Debit Card')" class="w-full flex justify-between items-center bg-slate-50 hover:bg-indigo-50 border border-slate-100 p-3 rounded-xl font-bold text-xs text-slate-700 transition-all">
+                        <span>💳 Credit / Debit Card</span> <span>➡️</span>
+                    </button>
+                </div>
+                <div class="text-[10px] text-center text-slate-400 leading-normal">🔒 Encrypted transaction deployment via Secure Gateways.</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="success-page" class="hidden flex-1 flex flex-col items-center justify-center p-6 text-center max-w-xl mx-auto space-y-6">
+        <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center text-3xl shadow-inner">✅</div>
+        <div>
+            <h2 class="text-2xl font-black text-slate-900">Payment Successful!</h2>
+            <p id="success-email-notice" class="text-sm text-slate-500 mt-2">Your premium PDF layout copy has been compiled and emailed to you.</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 w-full flex items-center justify-between text-left shadow-sm">
+            <div>
+                <div class="font-bold text-xs text-slate-800">Order ID: RS-92810-P</div>
+                <div class="text-[10px] text-slate-400 mt-0.5">Amount Paid: ₹1.00 via Secured UPI</div>
+            </div>
+            <span class="text-xs font-bold text-green-600 bg-green-50 px-2.5 py-1 rounded-full">Cleared</span>
+        </div>
+        <div class="w-full grid grid-cols-2 gap-4">
+            <button onclick="window.print()" class="bg-slate-900 hover:bg-black text-white font-bold py-3 px-4 rounded-xl text-xs tracking-wider uppercase transition-all">
+                🖨️ Local PDF Print
+            </button>
+            <button onclick="restartBuilder()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-4 rounded-xl text-xs tracking-wider uppercase transition-all">
+                🔄 Create Another
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let resumeState = {
+            name: '', title: '', email: '', phone: '', summary: '', photo: null,
+            experiences: [{ company: '', date: '', location: '', desc: '' }]
+        };
+        let currentTemplate = 'standard';
+        let authenticatedUserEmail = "";
+
+        function handlePhotoUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    resumeState.photo = event.target.result;
+                    document.getElementById('photo-preview').innerHTML = `<img src="${resumeState.photo}" class="w-full h-full object-cover">`;
+                    updatePreview();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function addExperience() {
+            resumeState.experiences.push({ company: '', date: '', location: '', desc: '' });
+            renderExperienceInputs();
+            updatePreview();
+        }
+
+        function removeExperience(index) {
+            if (resumeState.experiences.length > 1) {
+                resumeState.experiences.splice(index, 1);
+                renderExperienceInputs();
+                updatePreview();
+            }
+        }
+
+        function updateExpField(index, field, value) {
+            resumeState.experiences[index][field] = value;
+            updatePreview();
+        }
+
+        function renderExperienceInputs() {
+            const container = document.getElementById('experience-inputs-container');
+            container.innerHTML = resumeState.experiences.map((exp, i) => `
+                <div class="experience-card relative p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    ${i > 0 ? `<button onclick="removeExperience(${i})" class="remove-btn absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full text-[10px] font-bold">✕</button>` : ''}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <input type="text" value="${exp.company}" oninput="updateExpField(${i}, 'company', this.value)" placeholder="Company Name" class="p-2 bg-white rounded-lg text-xs outline-none border border-slate-200">
+                        <input type="text" value="${exp.date}" oninput="updateExpField(${i}, 'date', this.value)" placeholder="Dates (e.g. 2021 - Present)" class="p-2 bg-white rounded-lg text-xs outline-none border border-slate-200">
+                        <input type="text" value="${exp.location}" oninput="updateExpField(${i}, 'location', this.value)" placeholder="Location" class="p-2 bg-white rounded-lg text-xs outline-none border border-slate-200">
+                    </div>
+                    <textarea oninput="updateExpField(${i}, 'desc', this.value)" placeholder="Achievements..." class="w-full mt-3 p-2 bg-white rounded-lg text-xs outline-none border border-slate-200 h-24">${exp.desc}</textarea>
+                </div>
+            `).join('');
+        }
+
+        function updatePreview() {
+            resumeState.name = document.getElementById('input-name').value || 'Alex Johnson';
+            resumeState.title = document.getElementById('input-title').value || 'Target Job Title';
+            resumeState.email = document.getElementById('input-email').value || 'hello@example.com';
+            resumeState.phone = document.getElementById('input-phone').value || '+1 555 0000';
+            resumeState.summary = document.getElementById('input-summary').value || 'A brief professional summary...';
+
+            renderSelectedTemplate();
+            
+            // Mirror snapshot state to sidebar drawer element
+            document.getElementById('mini-preview').innerHTML = `
+                <div class="flex gap-4 items-center mb-4">
+                    <div class="w-16 h-16 bg-slate-100 rounded-full overflow-hidden">${resumeState.photo ? `<img src="${resumeState.photo}" class="w-full h-full object-cover">` : ''}</div>
+                    <div><h4 class="font-bold text-slate-800">${resumeState.name}</h4><p class="text-[10px] text-indigo-600 font-bold">${resumeState.title}</p></div>
+                </div>
+                <div class="text-[8px] text-slate-500 leading-tight">${resumeState.summary}</div>
+                <div class="mt-4 space-y-2">
+                    ${resumeState.experiences.map(e => `<div class="border-l-2 border-slate-100 pl-2"><div class="text-[8px] font-bold">${e.company || 'Job Position'}</div><div class="text-[6px] text-slate-400">${e.date}</div></div>`).join('')}
+                </div>
+            `;
+        }
+
+        function navigateToPage(n) {
+            document.getElementById('page-1').classList.toggle('hidden', n !== 1);
+            document.getElementById('page-2').classList.toggle('hidden', n !== 2);
+            document.getElementById('success-page').classList.add('hidden');
+            if (n === 2) updatePreview();
+        }
+
+        function selectTemplate(t) {
+            currentTemplate = t;
+            ['standard', 'executive', 'creative'].forEach(id => {
+                const b = document.getElementById(`btn-tmpl-${id}`);
+                b.className = id === t ? "w-full text-left p-4 rounded-2xl border-2 border-indigo-600 bg-indigo-50" : "w-full text-left p-4 rounded-2xl border-2 border-slate-100 hover:bg-slate-50";
+            });
+            renderSelectedTemplate();
+        }
+
+        function renderSelectedTemplate() {
+            const container = document.getElementById('printable-resume-container');
+            const photoHtml = resumeState.photo ? `<img src="${resumeState.photo}" class="w-full h-full object-cover">` : '<div class="w-full h-full bg-slate-200"></div>';
+            
+            const expListHtml = resumeState.experiences.map(e => `
+                <div class="mb-6">
+                    <div class="flex justify-between items-baseline mb-1">
+                        <h4 class="font-bold text-slate-900">${e.company || 'Professional Experience'}</h4>
+                        <span class="text-xs text-slate-400 italic">${e.date || 'Duration'}</span>
+                    </div>
+                    <div class="text-xs text-indigo-600 font-medium mb-2">${e.location || 'Location'}</div>
+                    <p class="text-xs text-slate-600 leading-relaxed whitespace-pre-line">${e.desc || 'No role description provided.'}</p>
+                </div>
+            `).join('');
+
+            if (currentTemplate === 'standard') {
+                container.innerHTML = `
+                    <div class="flex gap-8 items-center border-b-4 border-slate-900 pb-8 mb-8">
+                        <div class="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg shrink-0">${photoHtml}</div>
+                        <div><h2 class="text-4xl font-black text-slate-900 uppercase tracking-tighter">${resumeState.name}</h2><p class="text-xl text-indigo-600 font-bold mt-1 uppercase tracking-widest">${resumeState.title}</p><div class="mt-3 text-xs text-slate-500 font-medium space-x-4"><span>✉️ ${resumeState.email}</span><span>📱 ${resumeState.phone}</span></div></div>
+                    </div>
+                    <div class="grid grid-cols-1 gap-10">
+                        <section><h3 class="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-4 border-b pb-2">Profile</h3><p class="text-sm text-slate-700 leading-loose">${resumeState.summary}</p></section>
+                        <section><h3 class="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-4 border-b pb-2">Professional Journey</h3>${expListHtml}</section>
+                    </div>
+                `;
+            } else if (currentTemplate === 'executive') {
+                container.innerHTML = `
+                    <div class="bg-slate-900 text-white -mx-12 -mt-12 p-12 mb-10 flex gap-8 items-center">
+                        <div class="w-32 h-32 rounded-sm overflow-hidden border-2 border-slate-700 shrink-0">${photoHtml}</div>
+                        <div><h2 class="text-4xl font-bold tracking-tight mb-2">${resumeState.name}</h2><p class="text-slate-400 uppercase tracking-[0.3em] font-medium text-xs">${resumeState.title}</p><div class="mt-6 flex gap-6 text-[10px] uppercase font-bold text-slate-500"><span>${resumeState.email}</span><span>${resumeState.phone}</span></div></div>
+                    </div>
+                    <section class="mb-10"><h3 class="text-xs font-bold text-slate-300 uppercase tracking-widest mb-4">Executive Summary</h3><p class="text-sm text-slate-700 leading-relaxed font-serif italic">${resumeState.summary}</p></section>
+                    <section><h3 class="text-xs font-bold text-slate-300 uppercase tracking-widest mb-6">Key Career Milestones</h3>${expListHtml}</section>
+                `;
+            } else { 
+                container.innerHTML = `
+                    <div class="grid grid-cols-3 gap-0 min-h-[270mm] -m-12">
+                        <div class="col-span-1 bg-emerald-900 text-emerald-50 p-10 flex flex-col gap-8">
+                            <div class="w-full aspect-square rounded-2xl overflow-hidden border-2 border-emerald-700 shadow-2xl">${photoHtml}</div>
+                            <div><h2 class="text-3xl font-black leading-none mb-2">${resumeState.name}</h2><p class="text-xs text-emerald-300 font-bold uppercase tracking-widest">${resumeState.title}</p></div>
+                            <div class="mt-auto space-y-4 text-[10px] border-t border-emerald-800 pt-6">
+                                <div class="text-emerald-400 font-bold uppercase">Contact Info</div>
+                                <div>${resumeState.email}</div><div>${resumeState.phone}</div>
+                            </div>
+                        </div>
+                        <div class="col-span-2 p-12 bg-white">
+                            <section class="mb-12"><h3 class="text-sm font-black text-emerald-900 uppercase border-b-2 border-emerald-900 pb-2 mb-4">About Me</h3><p class="text-sm text-slate-600 leading-relaxed">${resumeState.summary}</p></section>
+                            <section><h3 class="text-sm font-black text-emerald-900 uppercase border-b-2 border-emerald-900 pb-2 mb-6">Work History</h3>${expListHtml}</section>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        /* CHECKOUT WORKFLOW CONTROLLERS */
+        function triggerAuthFlow() {
+            document.getElementById('auth-modal').classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function simulateLogin(provider) {
+            const emailInput = document.getElementById('input-email').value.trim();
+            authenticatedUserEmail = emailInput || "candidate@domain.com";
+            
+            closeModal('auth-modal');
+            alert(`Authenticated successfully via ${provider}! Redirecting to secure micro-payment gateway...`);
+            document.getElementById('payment-modal').classList.remove('hidden');
+        }
+
+        function processPayment(method) {
+            closeModal('payment-modal');
+            alert(`Processing ₹1.00 payment using ${method}... Transaction Approved!`);
+            
+            document.getElementById('page-1').className = "hidden";
+            document.getElementById('page-2').classList.add('hidden');
+            document.getElementById('success-page').classList.remove('hidden');
+            
+            document.getElementById('success-email-notice').innerText = `Success! Your premium resume copy has been compiled and emailed to: ${authenticatedUserEmail}`;
+            
+            setTimeout(() => {
+                window.print();
+            }, 800);
+        }
+
+        function restartBuilder() {
+            location.reload();
+        }
+
+        /* AI Assistant Engine */
+        async function enhanceBioWithAI() {
+            const bioInput = document.getElementById('input-summary');
+            const aiButton = document.getElementById('ai-btn');
+            const notes = bioInput.value.trim();
+            if (!notes) { alert("Please input some keywords before triggering AI assistance."); return; }
+            aiButton.innerText = "⏳ PROCESSING...";
+            aiButton.disabled = true;
+            try {
+                const prompt = `<|im_start|>system\nYou are an expert resume writer. Rewrite notes into a 3-sentence professional bio summary.<|im_end|>\n<|im_start|>user\nNotes: ${notes}<|im_end|>\n<|im_start|>assistant\n`;
+                const res = await fetch("https://api-inference.huggingface.co/models/Qwen/Qwen2.5-7B-Instruct/v1/completions", {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ prompt: prompt, max_tokens: 100, temperature: 0.5 })
+                });
+                const data = await res.json();
+                bioInput.value = data.choices[0].text.trim().replace(/^["']|["']$/g, '');
+                updatePreview();
+            } catch (e) { alert("AI Assistant service is currently busy."); }
+            finally { aiButton.innerText = "✨ AI ENHANCE BIO"; aiButton.disabled = false; }
+        }
+
+        renderExperienceInputs();
+        updatePreview();
+    </script>
+</body>
+</html>
