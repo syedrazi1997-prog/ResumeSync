@@ -360,48 +360,29 @@
             }
         }
 
-        /* CHECKOUT WORKFLOW CONTROLLERS */
-        function triggerAuthFlow() {
-            document.getElementById('auth-modal').classList.remove('hidden');
-        }
+       /* MODIFIED: Bypasses the authentication window completely */
+function triggerAuthFlow() {
+    // Skip the login popup panel and open the 1-Rupee payment modal instantly
+    document.getElementById('payment-modal').classList.remove('hidden');
+}
 
-        function closeModal(id) {
-            document.getElementById(id).classList.add('hidden');
-        }
-
-        async function simulateLogin(provider) {
-            const emailInput = document.getElementById('input-email').value.trim();
-            authenticatedUserEmail = emailInput || "candidate@domain.com";
-            
-            closeModal('auth-modal');
-            
-            // Redirects to real Google authentication screen using your project's endpoint
-            const { data, error } = await supabase.auth.signInWithOAuth({
-                provider: provider.toLowerCase(),
-                options: { redirectTo: window.location.href }
-            });
-
-            if (error) {
-                alert("Authentication Session Error: " + error.message);
-            } else {
-                document.getElementById('payment-modal').classList.remove('hidden');
-            }
-        }
-
-       async function processPayment(method) {
+async function processPayment(method) {
     closeModal('payment-modal');
     alert(`Processing ₹1.00 payment using ${method}... Transaction Approved!`);
     
-    // Instead of using Supabase Auth locally, send data straight to your new backend server API
+    // Auto-extract the input email field value or use a clean fallback identifier
+    const userEmail = document.getElementById('input-email').value.trim() || "guest-applicant@resumesync.com";
+    
     const payload = {
-        email: document.getElementById('input-email').value.trim() || "candidate@domain.com",
-        name: resumeState.name,
-        title: resumeState.title,
-        phone: resumeState.phone,
-        summary: resumeState.summary,
+        email: userEmail,
+        name: resumeState.name || 'Alex Johnson',
+        title: resumeState.title || 'Professional Candidate',
+        phone: resumeState.phone || '+1 555 0000',
+        summary: resumeState.summary || 'A brief professional summary...',
         experiences: resumeState.experiences
     };
 
+    // Send data cleanly to your functioning Express server endpoint
     try {
         const response = await fetch('/api/save-resume', {
             method: 'POST',
@@ -409,16 +390,16 @@
             body: JSON.stringify(payload)
         });
         const result = await response.json();
-        if(!result.success) console.error("Database Save Error:", result.error);
+        if(!result.success) console.error("Database Save Sync Failed:", result.error);
     } catch (err) {
-        console.error("Network failed:", err);
+        console.error("Server synchronization error:", err);
     }
     
-    // Smooth layout swap to printing receipt view
+    // Proceed directly to preview compiling and opening the print utility
     document.getElementById('page-1').className = "hidden";
     document.getElementById('page-2').classList.add('hidden');
     document.getElementById('success-page').classList.remove('hidden');
-    document.getElementById('success-email-notice').innerText = `Success! Your premium resume copy has been compiled and emailed to: ${payload.email}`;
+    document.getElementById('success-email-notice').innerText = `Success! Your premium resume copy has been compiled and emailed to: ${userEmail}`;
     
     setTimeout(() => { window.print(); }, 800);
 }
