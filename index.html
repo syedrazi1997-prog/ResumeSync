@@ -367,14 +367,16 @@ function triggerAuthFlow() {
 }
 
 async function processPayment(method) {
+    // 1. Hide the payment options drawer immediately
     closeModal('payment-modal');
+    
+    // 2. Alert the user that their mock transaction went through successfully
     alert(`Processing ₹1.00 payment using ${method}... Transaction Approved!`);
     
-    // Auto-extract the input email field value or use a clean fallback identifier
-    const userEmail = document.getElementById('input-email').value.trim() || "guest-applicant@resumesync.com";
-    
+    // 3. Automatically package user input data using a fallback email format
+    const fallbackEmail = document.getElementById('input-email').value.trim() || "guest-applicant@resumesync.com";
     const payload = {
-        email: userEmail,
+        email: fallbackEmail,
         name: resumeState.name || 'Alex Johnson',
         title: resumeState.title || 'Professional Candidate',
         phone: resumeState.phone || '+1 555 0000',
@@ -382,7 +384,7 @@ async function processPayment(method) {
         experiences: resumeState.experiences
     };
 
-    // Send data cleanly to your functioning Express server endpoint
+    // 4. Safely route data to your live running Express server instance
     try {
         const response = await fetch('/api/save-resume', {
             method: 'POST',
@@ -390,18 +392,23 @@ async function processPayment(method) {
             body: JSON.stringify(payload)
         });
         const result = await response.json();
-        if(!result.success) console.error("Database Save Sync Failed:", result.error);
+        if(!result.success) console.error("Express Database Save Failed:", result.error);
     } catch (err) {
-        console.error("Server synchronization error:", err);
+        console.error("Network failed to hit backend server endpoint:", err);
     }
     
-    // Proceed directly to preview compiling and opening the print utility
-    document.getElementById('page-1').className = "hidden";
+    // 5. Instantly change viewports to show the verified success message
+    document.getElementById('page-1').classList.add('hidden');
     document.getElementById('page-2').classList.add('hidden');
     document.getElementById('success-page').classList.remove('hidden');
-    document.getElementById('success-email-notice').innerText = `Success! Your premium resume copy has been compiled and emailed to: ${userEmail}`;
     
-    setTimeout(() => { window.print(); }, 800);
+    // Update the custom email confirmation label banner
+    document.getElementById('success-email-notice').innerText = `Success! Your premium resume copy has been compiled and emailed to: ${fallbackEmail}`;
+    
+    // 6. Give the browser a split second to render the final CSS layout, then open Print/PDF panel
+    setTimeout(() => { 
+        window.print(); 
+    }, 800);
 }
 
         function restartBuilder() {
