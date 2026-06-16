@@ -388,43 +388,40 @@
             }
         }
 
-        async function processPayment(method) {
-            closeModal('payment-modal');
-            alert(`Processing ₹1.00 payment using ${method}... Transaction Approved!`);
-            
-            // Fetch verified user details from active session 
-            const { data: { user } } = await supabase.auth.getUser();
-            
-            if (user) {
-                // 1. Sync details to 'profiles' table
-                await supabase.from('profiles').upsert({
-                    id: user.id,
-                    full_name: resumeState.name,
-                    job_title: resumeState.title,
-                    email: resumeState.email,
-                    phone: resumeState.phone,
-                    summary: resumeState.summary
-                });
+       async function processPayment(method) {
+    closeModal('payment-modal');
+    alert(`Processing ₹1.00 payment using ${method}... Transaction Approved!`);
+    
+    // Instead of using Supabase Auth locally, send data straight to your new backend server API
+    const payload = {
+        email: document.getElementById('input-email').value.trim() || "candidate@domain.com",
+        name: resumeState.name,
+        title: resumeState.title,
+        phone: resumeState.phone,
+        summary: resumeState.summary,
+        experiences: resumeState.experiences
+    };
 
-                // 2. Clear out older jobs entries and execute fresh batch sync
-                await supabase.from('experiences').delete().eq('user_id', user.id);
-                const rowsToInsert = resumeState.experiences.map(exp => ({
-                    user_id: user.id,
-                    company_name: exp.company,
-                    duration: exp.date,
-                    location: exp.location,
-                    description: exp.desc
-                }));
-                await supabase.from('experiences').insert(rowsToInsert);
-            }
-            
-            document.getElementById('page-1').className = "hidden";
-            document.getElementById('page-2').classList.add('hidden');
-            document.getElementById('success-page').classList.remove('hidden');
-            document.getElementById('success-email-notice').innerText = `Success! Your premium resume copy has been compiled and emailed to: ${authenticatedUserEmail}`;
-            
-            setTimeout(() => { window.print(); }, 800);
-        }
+    try {
+        const response = await fetch('/api/save-resume', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        if(!result.success) console.error("Database Save Error:", result.error);
+    } catch (err) {
+        console.error("Network failed:", err);
+    }
+    
+    // Smooth layout swap to printing receipt view
+    document.getElementById('page-1').className = "hidden";
+    document.getElementById('page-2').classList.add('hidden');
+    document.getElementById('success-page').classList.remove('hidden');
+    document.getElementById('success-email-notice').innerText = `Success! Your premium resume copy has been compiled and emailed to: ${payload.email}`;
+    
+    setTimeout(() => { window.print(); }, 800);
+}
 
         function restartBuilder() {
             location.reload();
