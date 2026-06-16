@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ResumeSync Pro - Advanced Professional Resume Builder</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
         /* PDF print configurations */
         @media print {
@@ -360,48 +361,70 @@
             }
         }
 
-       /* MODIFIED: Bypasses the authentication window completely */
-function triggerAuthFlow() {
-    // Skip the login popup panel and open the 1-Rupee payment modal instantly
-    document.getElementById('payment-modal').classList.remove('hidden');
-}
+      async function triggerAuthFlow() {
+    const fallbackEmail = document.getElementById('input-email').value.trim() || "customer@resumesync.com";
 
-async function processPayment(method) {
-    // 1. Hide the payment options drawer immediately
-    closeModal('payment-modal');
-    
-    // 2. Alert the user that their mock transaction went through successfully
-    alert(`Processing ₹1.00 payment using ${method}... Transaction Approved!`);
-    
-    // 3. Automatically package user input data using a fallback email format
-    const fallbackEmail = document.getElementById('input-email').value.trim() || "guest-applicant@resumesync.com";
-    const payload = {
-        email: fallbackEmail,
-        name: resumeState.name || 'Alex Johnson',
-        title: resumeState.title || 'Professional Candidate',
-        phone: resumeState.phone || '+1 555 0000',
-        summary: resumeState.summary || 'A brief professional summary...',
-        experiences: resumeState.experiences
-    };
-
-    // 4. Safely route data to your live running Express server instance
     try {
-        const response = await fetch('/api/save-resume', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        const result = await response.json();
-        if(!result.success) console.error("Express Database Save Failed:", result.error);
+        // 1. Fetch a verified cryptographic Order ID from your backend server
+        const response = await fetch('/api/create-order', { method: 'POST' });
+        const data = await response.json();
+        
+        if (!data.success) {
+            alert("Payment setup initialization error.");
+            return;
+        }
+
+        // 2. Configure the native checkout window options
+        const options = {
+            "key": data.keyId, 
+            "amount": "100", 
+            "currency": "INR",
+            "name": "ResumeSync Pro",
+            "description": "Premium Resume Generation",
+            "order_id": data.orderId,
+            "handler": async function (response){
+                // This block runs automatically once payment clears!
+                alert("Payment Captured Successfully! Transaction ID: " + response.razorpay_payment_id);
+                
+                // Package data payload and sync to your database
+                const payload = {
+                    email: fallbackEmail,
+                    name: resumeState.name,
+                    title: resumeState.title,
+                    phone: resumeState.phone,
+                    summary: resumeState.summary,
+                    experiences: resumeState.experiences
+                };
+
+                await fetch('/api/save-resume', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                // Display success dashboard screen and print
+                document.getElementById('page-1').classList.add('hidden');
+                document.getElementById('page-2').classList.add('hidden');
+                document.getElementById('success-page').classList.remove('hidden');
+                document.getElementById('success-email-notice').innerText = `Success! Your premium resume copy has been compiled and emailed to: ${fallbackEmail}`;
+                
+                setTimeout(() => { window.print(); }, 800);
+            },
+            "prefill": {
+                "email": fallbackEmail,
+                "contact": document.getElementById('input-phone').value.trim() || "9999999999"
+            },
+            "theme": { "color": "#4f46e5" } // Brand matches Indigo styling
+        };
+
+        // 3. Open the true payment gateway modal frame
+        const rzp = new Razorpay(options);
+        rzp.open();
+
     } catch (err) {
-        console.error("Network failed to hit backend server endpoint:", err);
+        console.error("Payment modal execution error:", err);
     }
-    
-    // 5. Instantly change viewports to show the verified success message
-    document.getElementById('page-1').classList.add('hidden');
-    document.getElementById('page-2').classList.add('hidden');
-    document.getElementById('success-page').classList.remove('hidden');
-    
+}
     // Update the custom email confirmation label banner
     document.getElementById('success-email-notice').innerText = `Success! Your premium resume copy has been compiled and emailed to: ${fallbackEmail}`;
     
