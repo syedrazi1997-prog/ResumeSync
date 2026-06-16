@@ -109,7 +109,6 @@
         <section class="w-full md:w-1/3 bg-white rounded-2xl shadow-sm p-6 space-y-6">
             <button onclick="navigateToPage(1)" class="text-indigo-600 hover:underline font-bold text-xs uppercase tracking-widest">⬅️ Back to edit</button>
             <h2 class="text-xl font-black text-slate-800">Select Template</h2>
-
             <div class="space-y-4">
                 <button onclick="selectTemplate('standard')" id="btn-tmpl-standard" class="w-full text-left p-4 rounded-2xl border-2 border-indigo-600 bg-indigo-50">
                     <div class="font-bold text-slate-900 text-sm">Professional Minimalist</div>
@@ -124,58 +123,13 @@
                     <div class="text-[10px] text-slate-500 uppercase mt-1">Green Sidebar • Distinctive</div>
                 </button>
             </div>
-
             <button onclick="triggerAuthFlow()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-4 rounded-2xl transition-all shadow-xl flex justify-center items-center gap-2 tracking-wide text-sm">
                 📥 DOWNLOAD NOW
             </button>
         </section>
-
         <section class="w-full md:w-2/3 bg-slate-300 rounded-2xl p-4 md:p-8 overflow-y-auto flex justify-center" style="max-height: 85vh;">
             <div id="printable-resume-container" class="bg-white w-[210mm] min-h-[297mm] shadow-2xl p-12 rounded-sm origin-top scale-[0.8] md:scale-100"></div>
         </section>
-    </div>
-
-    <div id="auth-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 text-center space-y-6">
-            <div>
-                <h3 class="text-xl font-extrabold text-slate-900">Sign in to unlock download</h3>
-                <p class="text-xs text-slate-400 mt-1">Choose an email provider account to securely save your document copies</p>
-            </div>
-            <div class="space-y-3">
-                <button onclick="simulateLogin('Google')" class="w-full flex items-center justify-center gap-3 border border-slate-200 p-3 rounded-xl hover:bg-slate-50 font-bold text-sm text-slate-700 transition-all">
-                    <span class="text-base">🔴</span> Continue with Google
-                </button>
-                <button onclick="simulateLogin('Microsoft')" class="w-full flex items-center justify-center gap-3 border border-slate-200 p-3 rounded-xl hover:bg-slate-50 font-bold text-sm text-slate-700 transition-all">
-                    <span class="text-base">🔵</span> Continue with Microsoft
-                </button>
-                <button onclick="simulateLogin('GitHub')" class="w-full flex items-center justify-center gap-3 border border-slate-200 p-3 rounded-xl hover:bg-slate-50 font-bold text-sm text-slate-700 transition-all">
-                    <span class="text-base">⚫</span> Continue with GitHub
-                </button>
-            </div>
-            <button onclick="closeModal('auth-modal')" class="text-xs font-semibold text-slate-400 hover:underline">Cancel</button>
-        </div>
-    </div>
-
-    <div id="payment-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden border border-slate-100">
-            <div class="bg-indigo-900 text-white p-6 text-center">
-                <div class="text-[10px] font-bold tracking-widest text-indigo-300 uppercase">Secure Checkout</div>
-                <div class="text-3xl font-black mt-2">₹ 1.00</div>
-                <p class="text-xs text-indigo-200 mt-1">ResumeSync Pro Premium Plan</p>
-            </div>
-            <div class="p-6 space-y-6">
-                <div class="space-y-3">
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Select Payment Mode</label>
-                    <button onclick="processPayment('UPI / GooglePay')" class="w-full flex justify-between items-center bg-slate-50 hover:bg-indigo-50 border border-slate-100 p-3 rounded-xl font-bold text-xs text-slate-700 transition-all">
-                        <span>⚡ BHIM UPI / GPay / PhonePe</span> <span>➡️</span>
-                    </button>
-                    <button onclick="processPayment('Credit/Debit Card')" class="w-full flex justify-between items-center bg-slate-50 hover:bg-indigo-50 border border-slate-100 p-3 rounded-xl font-bold text-xs text-slate-700 transition-all">
-                        <span>💳 Credit / Debit Card</span> <span>➡️</span>
-                    </button>
-                </div>
-                <div class="text-[10px] text-center text-slate-400 leading-normal">🔒 Encrypted transaction deployment via Secure Gateways.</div>
-            </div>
-        </div>
     </div>
 
     <div id="success-page" class="hidden flex-1 flex flex-col items-center justify-center p-6 text-center max-w-xl mx-auto space-y-6">
@@ -202,25 +156,11 @@
     </div>
 
     <script>
-        // 1. Inject the Supabase Cloud Library Bundle
-        const scriptElement = document.createElement('script');
-        scriptElement.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
-        document.head.appendChild(scriptElement);
-
-        let supabase;
         let resumeState = {
             name: '', title: '', email: '', phone: '', summary: '', photo: null,
             experiences: [{ company: '', date: '', location: '', desc: '' }]
         };
         let currentTemplate = 'standard';
-        let authenticatedUserEmail = "";
-
-        // 2. Initialize database endpoints with your precise Project URL and Publishable Key
-        scriptElement.onload = () => {
-            const SUPABASE_URL = 'https://bjonxpuepljsyrdmqrqn.supabase.co'; 
-            const SUPABASE_ANON_KEY = 'sb_publishable_HUAfYN1JVw7o2FS3_evp3g_AYnIPH-B';
-            supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        };
 
         function handlePhotoUpload(e) {
             const file = e.target.files[0];
@@ -361,78 +301,63 @@
             }
         }
 
-      async function triggerAuthFlow() {
-    const fallbackEmail = document.getElementById('input-email').value.trim() || "customer@resumesync.com";
-
-    try {
-        // 1. Fetch a verified cryptographic Order ID from your backend server
-        const response = await fetch('/api/create-order', { method: 'POST' });
-        const data = await response.json();
-        
-        if (!data.success) {
-            alert("Payment setup initialization error.");
-            return;
-        }
-
-        // 2. Configure the native checkout window options
-        const options = {
-            "key": data.keyId, 
-            "amount": "100", 
-            "currency": "INR",
-            "name": "ResumeSync Pro",
-            "description": "Premium Resume Generation",
-            "order_id": data.orderId,
-            "handler": async function (response){
-                // This block runs automatically once payment clears!
-                alert("Payment Captured Successfully! Transaction ID: " + response.razorpay_payment_id);
+        async function triggerAuthFlow() {
+            const fallbackEmail = document.getElementById('input-email').value.trim() || "customer@resumesync.com";
+            try {
+                const response = await fetch('/api/create-order', { method: 'POST' });
+                const data = await response.json();
                 
-                // Package data payload and sync to your database
-                const payload = {
-                    email: fallbackEmail,
-                    name: resumeState.name,
-                    title: resumeState.title,
-                    phone: resumeState.phone,
-                    summary: resumeState.summary,
-                    experiences: resumeState.experiences
+                if (!data.success) {
+                    alert("Payment setup initialization error. Check your server logs.");
+                    return;
+                }
+
+                const options = {
+                    "key": data.keyId, 
+                    "amount": "100", 
+                    "currency": "INR",
+                    "name": "ResumeSync Pro",
+                    "description": "Premium Resume Generation",
+                    "order_id": data.orderId,
+                    "handler": async function (response) {
+                        alert("Payment Captured Successfully! ID: " + response.razorpay_payment_id);
+                        
+                        const payload = {
+                            email: fallbackEmail,
+                            name: resumeState.name,
+                            title: resumeState.title,
+                            phone: resumeState.phone,
+                            summary: resumeState.summary,
+                            experiences: resumeState.experiences
+                        };
+
+                        await fetch('/api/save-resume', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        document.getElementById('page-1').classList.add('hidden');
+                        document.getElementById('page-2').classList.add('hidden');
+                        document.getElementById('success-page').classList.remove('hidden');
+                        document.getElementById('success-email-notice').innerText = `Success! Your premium resume copy has been compiled and emailed to: ${fallbackEmail}`;
+                        
+                        setTimeout(() => { window.print(); }, 800);
+                    },
+                    "prefill": {
+                        "email": fallbackEmail,
+                        "contact": document.getElementById('input-phone').value.trim() || "9999999999"
+                    },
+                    "theme": { "color": "#4f46e5" }
                 };
 
-                await fetch('/api/save-resume', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+                const rzp = new Razorpay(options);
+                rzp.open();
 
-                // Display success dashboard screen and print
-                document.getElementById('page-1').classList.add('hidden');
-                document.getElementById('page-2').classList.add('hidden');
-                document.getElementById('success-page').classList.remove('hidden');
-                document.getElementById('success-email-notice').innerText = `Success! Your premium resume copy has been compiled and emailed to: ${fallbackEmail}`;
-                
-                setTimeout(() => { window.print(); }, 800);
-            },
-            "prefill": {
-                "email": fallbackEmail,
-                "contact": document.getElementById('input-phone').value.trim() || "9999999999"
-            },
-            "theme": { "color": "#4f46e5" } // Brand matches Indigo styling
-        };
-
-        // 3. Open the true payment gateway modal frame
-        const rzp = new Razorpay(options);
-        rzp.open();
-
-    } catch (err) {
-        console.error("Payment modal execution error:", err);
-    }
-}
-    // Update the custom email confirmation label banner
-    document.getElementById('success-email-notice').innerText = `Success! Your premium resume copy has been compiled and emailed to: ${fallbackEmail}`;
-    
-    // 6. Give the browser a split second to render the final CSS layout, then open Print/PDF panel
-    setTimeout(() => { 
-        window.print(); 
-    }, 800);
-}
+            } catch (err) {
+                console.error("Payment modal execution error:", err);
+            }
+        }
 
         function restartBuilder() {
             location.reload();
